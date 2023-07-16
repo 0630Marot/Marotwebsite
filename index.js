@@ -5,7 +5,7 @@ const express = require('express');
 
 const app = express();
 const PORT = process.env.PORT | 9000;
-
+app.get('/', (request, response) => response.json({ message: 'Hello' }));
 
 // const server = http.createServer((request, response) => {
 //     let html = fs.readFileSync(__dirname + '/index.html')
@@ -19,4 +19,4 @@ const PORT = process.env.PORT | 9000;
 // }
 // );
 
-app.listen(PORT,()=>console.log(`Srver is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Srver is running on port ${PORT}`));
