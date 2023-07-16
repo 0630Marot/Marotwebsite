@@ -51,5 +51,5 @@ jobs:
         with:
           app-name: 'MarotWeb'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_3F5BF1519DAF4A8E874DE0B290D5B1A5 }}
+          publish-profile: ${{ secrets.S0G0sEkJgNEgf4KgEb2vz9sY6ZXalG5TmM7gTRWXgkAfLKyaGcMZNmL7tTWi }}
           package: .
