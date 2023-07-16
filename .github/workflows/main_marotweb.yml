@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v1
         with:
-          node-version: '18.x'
+          node-version: '16.x'
 
       - name: npm install, build
         run: |
@@ -51,5 +51,5 @@ jobs:
         with:
           app-name: 'MarotWeb'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.S0G0sEkJgNEgf4KgEb2vz9sY6ZXalG5TmM7gTRWXgkAfLKyaGcMZNmL7tTWi }}
+          publish-profile: ${{ secrets.lL8NSocxbD7TlDobl6P9PTcQk3KdszL6LH1s2GGAnQ5c6fjo3o6EbBkdo4qP }}
           package: .
