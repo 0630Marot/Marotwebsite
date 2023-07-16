@@ -1,13 +1,22 @@
-const http = require('http')
-const fs = require('fs')
+// const http = require('http');
+// const fs = require('fs');
+const express = require('express');
 
-const server = http.createServer((request, response) => {
-    let html = fs.readFileSync(__dirname + '/index.html')
-    response.end(html)
-}
-)
 
-server.listen(443, () => {
-    console.log('sevrer on !')
-}
-)
+const app = express();
+const PORT = process.env.PORT | 9000;
+
+
+// const server = http.createServer((request, response) => {
+//     let html = fs.readFileSync(__dirname + '/index.html')
+//     response.setHeader('content-type', 'text/html;charset=utf-8');
+//     response.end(html);
+// }
+// );
+
+// server.listen(9000, () => {
+//     console.log('sevrer on !');
+// }
+// );
+
+app.listen(PORT,()=>console.log(`Srver is running on port ${PORT}`));
