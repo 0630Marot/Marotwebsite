@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
+//引入mongoDB
+const db = require('./db');
+
+db(() => {
+
+  console.log('mongodb连接成功');
 
 var app = require('../app');
 var debug = require('debug')('generator:server');
@@ -12,7 +15,7 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
 
 /**
@@ -88,3 +91,7 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+}, () => {
+  console.log('mongodb连接失败');
+});
