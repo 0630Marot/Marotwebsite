@@ -15,11 +15,11 @@ router.get('/', function(req, res, next) {
 
 });
 
-router.post('/press',function(req, res, next) {
+router.get('/press',function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin','*');
   count++;
-
   testModel.updateOne({ _id: '64b88fb2779ce6378cee1f66' },{count:count}).then(data=>{
-    res.render('index',{count:count});
+    res.send(count.toString());
   });
 });
 module.exports = router;
