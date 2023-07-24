@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const testModel=require('../model/testModel');
-router.use(express.static('./public'));
 
 let count=0;
-/* GET home. */
+
 router.get('/', function(req, res, next) {
 
   testModel.findOne({ _id: '64b88fb2779ce6378cee1f66' }).then(data => {
