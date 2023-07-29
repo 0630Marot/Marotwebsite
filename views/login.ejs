@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zn-CH">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,25 +10,44 @@
 <style>
 
 </style>
+
 <body>
     <div id="page" class="site">
         <div class="container">
             <div class="login">
                 <div class="hero">
                     <h1>欢迎登录<br>马罗站</h1>
-                    <p>私聊<a href="tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=2185720896">马罗</a>获取邀请码</p>
+                    <p>一个致力于完成马罗个人创想的分享网站<br>
+                        想注册？私聊
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
+
+
+                            <path
+                                d="M19.9139 14.529C19.7336 13.955 19.4877 13.2856 19.2385 12.643L18.3288 10.3969C18.3295 10.371 18.3408 9.92858 18.3408 9.70053C18.3408 5.8599 16.5082 2.00037 12.0009 2C7.49403 2.00037 5.66113 5.8599 5.66113 9.70053C5.66113 9.92858 5.67237 10.371 5.67312 10.3969L4.76379 12.643C4.51453 13.2856 4.26827 13.955 4.08798 14.529C3.2285 17.2657 3.507 18.3982 3.71915 18.4238C4.17419 18.4779 5.49021 16.3635 5.49021 16.3635C5.49021 17.5879 6.12741 19.1858 7.5064 20.3398C6.99064 20.4971 6.35868 20.7388 5.95237 21.0355C5.58729 21.3025 5.63302 21.5743 5.69861 21.6841C5.9876 22.1661 10.6542 21.9918 12.0017 21.8417C13.3488 21.9918 18.0158 22.1661 18.3044 21.6841C18.3704 21.5743 18.4157 21.3025 18.0507 21.0355C17.6443 20.7388 17.012 20.4971 16.4959 20.3395C17.8745 19.1858 18.5117 17.5879 18.5117 16.3635C18.5117 16.3635 19.8281 18.4779 20.2831 18.4238C20.4949 18.3982 20.7734 17.2657 19.9139 14.529Z">
+                            </path>
+                            <defs>
+                                <linearGradient id="linear" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#c471ed" />
+                                    <stop offset="100%" stop-color="#4460f1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span class="icon"></span>
+                        <a href="tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=2185720896">马罗</a>获取邀请码
+                    </p>
                 </div>
                 <div class="main">
-                    <form action="">
-                        <p><input type="email" placeholder="邮箱地址"></p>
+                    <form id="form">
+                        <p><input type="email" placeholder="邮箱地址" id="email"></p>
                         <p class="password">
-                            <input type="password" placeholder="你的密码">
-                            <!-- <i class="ri-eye-off-line">aaa</i> -->
+                            <input type="password" placeholder="邀请码/密码" id="pass">
                             <br>
-                            <a href="#" onclick="document.getElementById('msg').innerHTML='忘记密码请私聊马罗';return false">忘记密码</a>
+                            <a href="#"
+                                onclick="document.getElementById('msg').innerHTML='忘记密码请私聊马罗';return false">忘记密码</a>
                         </p>
                         <p>
                             <input type="submit" class="submit" value="登录">
+                            <!-- <button class="submit" >登录</button> -->
                         </p>
                     </form>
                     <div class="separator">
@@ -41,6 +61,95 @@
 
     <script>
 
+        const email = document.getElementById('email');
+        const pass = document.getElementById('pass');
+        const msg = document.getElementById('msg');
+        document.getElementById('form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const xhr = new XMLHttpRequest();
+            xhr.timeout = 5000;
+            xhr.ontimeout = function () {
+                msg.innerHTML = '网络异常，请求超时';
+            }
+            xhr.onerror = function () {
+                msg.innerHTML = '网络异常，无法连接到服务器';
+            }
+            xhr.open('POST', '/login/authentication');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(`email=` + email.value + `&pass=` + pass.value);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        switch (parseInt(xhr.response)) {
+                            case 0:
+                                msg.innerHTML = '登录成功';
+                                window.open('/users');
+                                break;
+                            case 1:
+                                msg.innerHTML = '密码错误';
+                                break;
+                            case 2:
+                                msg.innerHTML = '新建账号';
+                                changepass();
+
+                                break;
+                            case 3:
+                                msg.innerHTML = '无效的邀请码';
+                                break;
+                            case 4:
+                                msg.innerHTML = '密码不得为空';
+                                break;
+                        }
+                    }
+                }
+            }
+        });
+        function changepass() {
+            let username = prompt('设置用户名为');
+            let newpass = prompt('设置密码为');
+            const xhr = new XMLHttpRequest();
+            xhr.timeout = 5000;
+            xhr.ontimeout = function () {
+                msg.innerHTML = '网络异常，请求超时';
+            }
+            xhr.onerror = function () {
+                msg.innerHTML = '网络异常，无法连接到服务器';
+            }
+            xhr.open('POST', '/login/newaccount');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(`email=` + email.value + `&pass=` + pass.value + `&newpass=` + newpass + `&username=` + username);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        switch (parseInt(xhr.response)) {
+                            case 11:
+                                msg.innerHTML = '新建账号成功';
+                                window.open('/users');
+                                break;
+                            case 12:
+                                msg.innerHTML = '新建账号错误，请联系管理员';
+                                break;
+                            case 13:
+                                msg.innerHTML = '无效的邀请码';
+                                break;
+                            case 14:
+                                msg.innerHTML = '密码存在特殊字符';
+                                
+                                break;
+                            case 15:
+                                msg.innerHTML = '密码太短,至少6位';
+                                
+                                break;
+                            case 16:
+                                msg.innerHTML = '密码不得为空';
+                                
+                                break;
+                        }
+
+                    }
+                }
+            }
+        }
     </script>
 
 </body>

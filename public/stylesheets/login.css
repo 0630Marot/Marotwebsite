@@ -71,10 +71,10 @@ h1 {
 .hero::before {
     content: '';
     position: absolute;
-    top: 15%;
-    left: 0;
-    width: 280px;
-    height: 100px;
+    top: 0%;
+    left: 2%;
+    width: 350px;
+    height: 200px;
     background: linear-gradient(to right, var(--primary-color), #c471ed, #f64f59);
     z-index: -1;
     filter: blur(70px);
@@ -83,11 +83,25 @@ h1 {
 .hero h1 {
     letter-spacing: 12px;
 }
-
+.hero p{
+    text-indent: -25px;
+}
 .hero a {
     font-weight: 500;
     color: var(--primary-color);
+    margin-left: 25px;
 }
+
+.icon {
+    /* color: var(--primary-color); */
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    background-size: cover;
+    fill:url('#linear');
+}
+
 
 .hero a:hover,
 form .password a:hover {
@@ -127,7 +141,7 @@ input::placeholder {
 }
 
 form input:not(.submit) {
-    background-color: var(--light-bg-color);
+    background-color:#e6e9fd;
 }
 
 /* form .password i{

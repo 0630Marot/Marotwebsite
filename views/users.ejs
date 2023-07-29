@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zn-CH">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户个人界面</title>
+    <style>
+        /* #word-desc{
+            min-height: 1em;
+        } */
+        html {
+            font-size: 20px;
+        }
+
+        button {
+            font-size: 20px;
+        }
+        #word-field{
+            width: 500px;
+            margin: 0 auto;
+        }
+        #word-info {
+            font-size: 30px;
+        }
+
+        #word-text {
+            font-size: 25px;
+            width: 15em;
+            height: 3em;
+        }
+
+        #word-desc {
+            color: green;
+        }
+
+        .word-right {
+            color: green;
+        }
+
+        .word-wrong {
+            color: red
+        }
+    </style>
+</head>
+
+<body>
+    <h3 id="login-msg"></h3>
+    <%- permission %>
+        <hr>
+        <div id="word-field">
+            标记：<span id="word-mark"></span><br>
+            <div id="word-info">
+                <span id="word-index"></span>. <span id="word-desc"></span><br>
+            </div>
+            <input id="word-text" onclick="word.classList.remove('word-wrong');word.classList.remove('word-right');"
+                type="text">
+            <button id="audio" onclick="audioPlayer.play()">声音</button>
+            <audio id="audioPlayer"></audio>
+            <br>
+            <button id="word-check" onclick="checkword()">检查</button>
+            <button id="word-answer" onclick="trueword.innerText=wordContent">查看答案</button>
+            <button id="word-change" onclick="check(2)">跳转</button>
+            <hr>
+            <button id="word-last" onclick="check(3)">上一个</button>
+            <button id="word-wrong" onclick="check(4)">标记+1</button>
+            <button id="word-right" onclick="check(5)">标记-1</button>
+            <button id="word-next" onclick="check(6)">下一个</button>
+            <br>
+            <input type="checkbox" class="review-mode" value="isreview">复习模式
+            <p id="word-trueword"></p>
+        </div>
+        <script>
+            let indexNum = 1;
+            let wordContent;
+            const word = document.getElementById('word-text');
+            const index = document.getElementById('word-index');
+            const desc = document.getElementById('word-desc');
+            const mark = document.getElementById('word-mark');
+            const trueword = document.getElementById('word-trueword');
+            const audioPlayer = document.getElementById('audioPlayer');
+            document / addEventListener('DOMContentLoaded', function () {
+
+                check(1);
+            })
+            function check(type) {
+                word.classList.remove('word-wrong');
+                word.classList.remove('word-right');
+                trueword.innerText = '';
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/users/check');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                if (type === 2) {
+                    xhr.send(`type=` + type + `&index=` + word.value);
+                } else {
+                    xhr.send(`type=` + type + `&index=` + indexNum.toString());
+                }
+                word.value = '';
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const res = JSON.parse(xhr.response);
+                            switch (parseInt(res.type)) {
+                                case 1:
+                                    wordContent = res.word;
+                                    index.innerHTML = res.index;
+                                    desc.innerHTML = res.desc;
+                                    mark.innerHTML = res.mark;
+                                    audioPlayer.src = "http://baicizhan.qiniucdn.com/word_audios/" + wordContent + ".mp3";
+                                    indexNum = parseInt(res.index);
+                                    break;
+                                case 2:
+                                    // msg.innerHTML = '新建账号';
+
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            function checkword() {
+                if (word.value == wordContent) {
+                    word.classList.remove('word-wrong');
+                    word.classList.add('word-right');
+                } else {
+                    word.classList.add('word-wrong');
+                    word.classList.remove('word-right');
+                }
+            }
+        </script>
+</body>
+
+</html>
