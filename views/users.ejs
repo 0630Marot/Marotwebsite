@@ -16,10 +16,12 @@
         button {
             font-size: 20px;
         }
-        #word-field{
+
+        #word-field {
             width: 500px;
             margin: 0 auto;
         }
+
         #word-info {
             font-size: 30px;
         }
@@ -28,6 +30,7 @@
             font-size: 25px;
             width: 15em;
             height: 3em;
+            margin-bottom: 0.5em;
         }
 
         #word-desc {
@@ -41,6 +44,10 @@
         .word-wrong {
             color: red
         }
+
+        .us {
+            float: right;
+        }
     </style>
 </head>
 
@@ -50,16 +57,16 @@
         <hr>
         <div id="word-field">
             标记：<span id="word-mark"></span><br>
+            <p id="word-trueword"></p>
             <div id="word-info">
                 <span id="word-index"></span>. <span id="word-desc"></span><br>
             </div>
-            <input id="word-text" onclick="word.classList.remove('word-wrong');word.classList.remove('word-right');"
-                type="text">
-            <button id="audio" onclick="audioPlayer.play()">声音</button>
+            <input id="word-text" onkeydown="handleKeyDown(event)"
+                onclick="word.classList.remove('word-wrong');word.classList.remove('word-right');" type="text">
             <audio id="audioPlayer"></audio>
             <br>
             <button id="word-check" onclick="checkword()">检查</button>
-            <button id="word-answer" onclick="trueword.innerText=wordContent">查看答案</button>
+            <button id="word-answer" onclick="getAns()">查看答案</button>
             <button id="word-change" onclick="check(2)">跳转</button>
             <hr>
             <button id="word-last" onclick="check(3)">上一个</button>
@@ -67,8 +74,32 @@
             <button id="word-right" onclick="check(5)">标记-1</button>
             <button id="word-next" onclick="check(6)">下一个</button>
             <br>
-            <input type="checkbox" class="review-mode" value="isreview">复习模式
-            <p id="word-trueword"></p>
+            <input type="checkbox" id="review-mode" name="isreview">复习模式
+            <input type="number" id="reviwe-level" name="reviewLevel">
+            <div id="dictionary">
+                <div id="uk">
+                    <span id="uk-p"></span>
+                    <button class="audio" onclick="audioSet(1)">英式发音</button>
+                </div>
+                <div id="us">
+                    <span id="us-p"></span>
+                    <button class="audio" onclick="audioSet(2)">美式发音</button>
+
+                </div>
+
+                <div id="yd-dict"></div>
+                <input type="checkbox" id="et-mode" name="iset">访问词源
+                <div id="et">
+                    <hr>
+                    <button onclick="toggleDisplay(et)">查看词源</button>
+                    <div id="et-text"></div>
+                </div>
+                <div id="wiki">
+                    <hr>
+                    <button onclick="toggleDisplay(wiki)">查看维基介绍</button>
+                    <p id="wiki-text"></p>
+                </div>
+            </div>
         </div>
         <script>
             let indexNum = 1;
@@ -79,21 +110,45 @@
             const mark = document.getElementById('word-mark');
             const trueword = document.getElementById('word-trueword');
             const audioPlayer = document.getElementById('audioPlayer');
+            const wiki = document.getElementById('wiki-text');
+            const et = document.getElementById('et-text');
+            const yd = document.getElementById('yd-dict');
+            const ukp = document.getElementById('uk-p');
+            const usp = document.getElementById('us-p');
+            const isR = document.getElementById('review-mode');
+            const isE = document.getElementById('et-mode');
+            const RL = document.getElementById('reviwe-level');
             document / addEventListener('DOMContentLoaded', function () {
 
                 check(1);
             })
+            function audioSet(type) {
+                switch (type) {
+                    case 1:
+                        audioPlayer.src = "https://dict.youdao.com/dictvoice?audio=" + wordContent + "&type=1";
+                        break;
+                    case 2:
+                        audioPlayer.src = "https://dict.youdao.com/dictvoice?audio=" + wordContent + "&type=2";
+                        break;
+                }
+                audioPlayer.play();
+            }
             function check(type) {
                 word.classList.remove('word-wrong');
                 word.classList.remove('word-right');
-                trueword.innerText = '';
+                // trueword.innerText = '';
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/users/check');
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 if (type === 2) {
                     xhr.send(`type=` + type + `&index=` + word.value);
-                } else {
-                    xhr.send(`type=` + type + `&index=` + indexNum.toString());
+                }
+                else {
+                    if (isR.checked && (type === 3 || type === 6)) {
+                        xhr.send(`type=` + type + `&index=` + indexNum.toString() + `&review=` + RL.value);
+                    } else {
+                        xhr.send(`type=` + type + `&index=` + indexNum.toString());
+                    }
                 }
                 word.value = '';
                 xhr.onreadystatechange = function () {
@@ -106,17 +161,104 @@
                                     index.innerHTML = res.index;
                                     desc.innerHTML = res.desc;
                                     mark.innerHTML = res.mark;
-                                    audioPlayer.src = "http://baicizhan.qiniucdn.com/word_audios/" + wordContent + ".mp3";
+                                    if (res.mark > 0) {
+                                        mark.style.color = 'red';
+                                    } else {
+                                        mark.style.color = 'black';
+                                    }
+                                    trueword.innerText = wordContent;
+                                    trueword.style.visibility = 'hidden';
                                     indexNum = parseInt(res.index);
+                                    getYD(res.word);
+                                    getET(res.word);
+
                                     break;
                                 case 2:
                                     // msg.innerHTML = '新建账号';
-
+                                    break;
+                                case 3:
+                                    mark.innerHTML = res.mark;
                                     break;
                             }
                         }
                     }
                 }
+            }
+            function getYD(word) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/users/yd');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send('word=' + word);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const jsonObj = window.JSON.parse(xhr.response);
+                            if ('error' in jsonObj) {
+                                return;
+                            }
+                            // console.log(jsonObj.wiki.summary);
+                            yd.innerHTML = '';
+                            for (let i = 0; i < jsonObj.yd[0].trs.length; i++) {
+                                const st = jsonObj.yd[0].trs[i].tr[0].l.i;
+                                if (st.toString().includes('人名')||st.toString().includes('【名】')) {
+                                    continue;
+                                }
+                                yd.innerHTML += st;
+                                yd.innerHTML += '<br>';
+                            }
+                            ukp.innerHTML = jsonObj.yd[0].ukphone;
+                            usp.innerHTML = jsonObj.yd[0].usphone;
+                            ukp.style.visibility = 'hidden';
+                            usp.style.visibility = 'hidden';
+                            if ('' === jsonObj.wiki || jsonObj.wiki[0].summary.toString().includes('may refer')) {
+                                document.getElementById('wiki').style.display = 'none';
+                                wiki.innerText = '';
+                            } else {
+                                document.getElementById('wiki').style.display = 'block';
+                                wiki.innerText = jsonObj.wiki[0].summary;
+                            }
+                            wiki.style.display = 'none';
+                            // console.log(xhr.response);
+                        }
+                    }
+                }
+            }
+            function getET(word) {
+                document.getElementById('et').style.display = 'none';
+                et.innerText = '';
+                if (isE.checked) {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/users/etymonline');
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.send('word=' + word);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                const jsonObj = window.JSON.parse(xhr.response);
+                                if (jsonObj.word === wordContent && jsonObj.et !== null) {
+                                    const parser = new DOMParser();
+                                    const doc = parser.parseFromString(jsonObj.et, 'text/html');
+
+                                    if ('' !== doc) {
+                                        const aTags = doc.querySelectorAll('a');
+                                        // 替换 <a> 标签为 <span>
+                                        aTags.forEach(aTag => {
+                                            const spanTag = document.createElement('span');
+                                            spanTag.innerHTML = aTag.innerHTML;
+                                            aTag.parentNode.replaceChild(spanTag, aTag);
+                                        });
+                                        document.getElementById('et').style.display = 'block';
+                                        et.innerHTML = doc.body.innerHTML;
+                                    }
+                                    et.style.display = 'none';
+                                }
+
+                                // console.log(xhr.response);
+                            }
+                        }
+                    }
+                }
+
             }
             function checkword() {
                 if (word.value == wordContent) {
@@ -125,6 +267,58 @@
                 } else {
                     word.classList.add('word-wrong');
                     word.classList.remove('word-right');
+                }
+                audioSet(1);
+            }
+            function getAns() {
+                const currentDisplay = window.getComputedStyle(trueword).visibility;
+                if (currentDisplay === 'visible') {
+                    trueword.style.visibility = 'hidden';
+                    ukp.style.visibility = 'hidden';
+                    usp.style.visibility = 'hidden';
+                } else {
+                    trueword.style.visibility = 'visible';
+                    ukp.style.visibility = 'visible';
+                    usp.style.visibility = 'visible';
+                }
+
+            }
+            function toggleDisplay(element) {
+                // 获取元素的当前 display 样式
+                const currentDisplay = window.getComputedStyle(element).display;
+
+                // 根据当前样式切换显示状态
+                if (currentDisplay === 'block') {
+                    element.style.display = 'none';
+                } else {
+                    element.style.display = 'block';
+                }
+            }
+            function handleKeyDown(event) {
+                if (event.key === 'Enter') {
+                    if (event.shiftKey) {
+                        getAns();
+                    } else {
+                        let v = parseInt(word.value);
+                        if (v) {
+                            check(2);
+                        } else {
+                            checkword();
+                        }
+                    }
+
+                }
+                if (event.key === 'ArrowDown') {
+                    check(6);
+                }
+                if (event.key === 'ArrowUp') {
+                    check(3);
+                }
+                if (event.key === '+') {
+                    check(4);
+                }
+                if (event.key === '-') {
+                    check(5);
                 }
             }
         </script>
