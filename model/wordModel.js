@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 let MainSchema = new mongoose.Schema({
-    index: Number,
-    word: String,
-    description:String,
+    permission: String,
+    owner: String,
+    dicname: String,
+    word: [String],
 });
-let _MainSchema = mongoose.model('words', MainSchema);
-module.exports=_MainSchema;
+let _MainSchema = mongoose.model('dictionaries', MainSchema);
+module.exports = _MainSchema;

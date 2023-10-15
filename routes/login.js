@@ -62,7 +62,10 @@ router.post('/newaccount', function (req, res, next) {
               password: req.body.newpass,
               email: req.body.email,
               permission: data.permission,
-              EnglishCount: [-1]
+              EnglishCount: [ {
+                dicname: "IELTS",
+                count: [-1],
+            }]
             }).then(innerdata => {
               console.log(innerdata);
               Model2.findByIdAndDelete(req.body.pass).then(thisdata => {

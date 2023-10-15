@@ -22,15 +22,19 @@
             margin: 0 auto;
         }
 
-        #word-info {
+        /* #word-info {
             font-size: 30px;
-        }
+        } */
 
         #word-text {
             font-size: 25px;
             width: 15em;
             height: 3em;
             margin-bottom: 0.5em;
+        }
+
+        #yd-dict {
+            font-size: 25px;
         }
 
         #word-desc {
@@ -48,21 +52,36 @@
         .us {
             float: right;
         }
+
+        #active-dic {
+            font-size: 18px;
+        }
+
+        #dic-upload {
+            float: right;
+            font-size: 18px;
+        }
     </style>
 </head>
 
-<body>
+<body onkeydown="handleKeyDown(event)">
     <h3 id="login-msg"></h3>
     <%- permission %>
         <hr>
+        <div id="dic-field">
+            <span>当前激活词库：</span>
+            <select id="active-dic" onchange="onChangeDic()"></select>
+            <form method="post" enctype="multipart/form-data" id="dic-upload">
+                <input type="button" value="上传单词" onclick="submitTxt()">
+                <input type="file" name="textFile">
+            </form>
+        </div>
+        <hr>
         <div id="word-field">
-            标记：<span id="word-mark"></span><br>
+            <span id="word-index"></span>.标记：<span id="word-mark"></span><br>
             <p id="word-trueword"></p>
-            <div id="word-info">
-                <span id="word-index"></span>. <span id="word-desc"></span><br>
-            </div>
-            <input id="word-text" onkeydown="handleKeyDown(event)"
-                onclick="word.classList.remove('word-wrong');word.classList.remove('word-right');" type="text">
+            <input id="word-text" onclick="word.classList.remove('word-wrong');word.classList.remove('word-right');"
+                type="text">
             <audio id="audioPlayer"></audio>
             <br>
             <button id="word-check" onclick="checkword()">检查</button>
@@ -84,9 +103,7 @@
                 <div id="us">
                     <span id="us-p"></span>
                     <button class="audio" onclick="audioSet(2)">美式发音</button>
-
                 </div>
-
                 <div id="yd-dict"></div>
                 <input type="checkbox" id="et-mode" name="iset">访问词源
                 <div id="et">
@@ -104,9 +121,9 @@
         <script>
             let indexNum = 1;
             let wordContent;
+            let dicname = "IELTS";
             const word = document.getElementById('word-text');
             const index = document.getElementById('word-index');
-            const desc = document.getElementById('word-desc');
             const mark = document.getElementById('word-mark');
             const trueword = document.getElementById('word-trueword');
             const audioPlayer = document.getElementById('audioPlayer');
@@ -118,9 +135,10 @@
             const isR = document.getElementById('review-mode');
             const isE = document.getElementById('et-mode');
             const RL = document.getElementById('reviwe-level');
+            const dicOption = document.getElementById('active-dic');
             document / addEventListener('DOMContentLoaded', function () {
-
-                check(1);
+                check(0);
+                word.focus();
             })
             function audioSet(type) {
                 switch (type) {
@@ -140,14 +158,16 @@
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/users/check');
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                if (type === 2) {
-                    xhr.send(`type=` + type + `&index=` + word.value);
+                if (type === 0) {
+                    xhr.send(`type=` + type);
+                } else if (type === 2) {
+                    xhr.send(`dic=` + dicname + `&type=` + type + `&index=` + word.value);
                 }
                 else {
                     if (isR.checked && (type === 3 || type === 6)) {
-                        xhr.send(`type=` + type + `&index=` + indexNum.toString() + `&review=` + RL.value);
+                        xhr.send(`dic=` + dicname + `&type=` + type + `&index=` + indexNum.toString() + `&review=` + RL.value);
                     } else {
-                        xhr.send(`type=` + type + `&index=` + indexNum.toString());
+                        xhr.send(`dic=` + dicname + `&type=` + type + `&index=` + indexNum.toString());
                     }
                 }
                 word.value = '';
@@ -156,10 +176,21 @@
                         if (xhr.status >= 200 && xhr.status < 300) {
                             const res = JSON.parse(xhr.response);
                             switch (parseInt(res.type)) {
+                                case 0:
+                                    for (var i = dicOption.options.length - 1; i >= 0; i--) {
+                                        dicOption.remove(i);
+                                    }
+                                    var options = res.dict;
+                                    options.push('创建新词库');
+                                    for (var i = 0; i < options.length; i++) {
+                                        dicOption.add(new Option(options[i], options[i]));
+                                    }
+                                    dicOption.options[0].selected = true;
+                                    onChangeDic();
+                                    break;
                                 case 1:
                                     wordContent = res.word;
                                     index.innerHTML = res.index;
-                                    desc.innerHTML = res.desc;
                                     mark.innerHTML = res.mark;
                                     if (res.mark > 0) {
                                         mark.style.color = 'red';
@@ -174,12 +205,26 @@
 
                                     break;
                                 case 2:
+                                    //超出单词范围
                                     // msg.innerHTML = '新建账号';
                                     break;
                                 case 3:
                                     mark.innerHTML = res.mark;
                                     break;
                             }
+                        }
+                    }
+                }
+            }
+            function createNewInvite() {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/users/createInvite');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            console.log(xhr.response);
                         }
                     }
                 }
@@ -199,10 +244,11 @@
                             // console.log(jsonObj.wiki.summary);
                             yd.innerHTML = '';
                             for (let i = 0; i < jsonObj.yd[0].trs.length; i++) {
-                                const st = jsonObj.yd[0].trs[i].tr[0].l.i;
-                                if (st.toString().includes('人名')||st.toString().includes('【名】')) {
+                                var st = jsonObj.yd[0].trs[i].tr[0].l.i.toString();
+                                if (st.includes('人名') || st.includes('【名】')) {
                                     continue;
                                 }
+                                st = st.replace(new RegExp(word, 'gi'), '**');
                                 yd.innerHTML += st;
                                 yd.innerHTML += '<br>';
                             }
@@ -223,6 +269,45 @@
                     }
                 }
             }
+            function onChangeDic() {
+                const op = dicOption.value;
+                if (op === '创建新词库') {
+                    let newdic = prompt('新词库名为');
+                    if (newdic == null) {
+                        return;
+                    }
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/users/newdic');
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.send('dic=' + newdic);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                if (xhr.response == 1) {
+                                    alert('已有重名词库');
+                                    check(0);
+                                } else {
+                                    var option = document.createElement("option");
+                                    dicOption.add(new Option(op, op));
+                                    for (var i = 0; i < dicOption.options.length; i++) {
+                                        if (dicOption.options[i].value === op) {
+                                            dicOption.options[i].selected = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                else {
+                    dicname = op;
+                    indexNum = 1;
+                    check(1);
+                }
+            }
+
             function getET(word) {
                 document.getElementById('et').style.display = 'none';
                 et.innerText = '';
@@ -306,7 +391,9 @@
                             checkword();
                         }
                     }
-
+                }
+                if (event.keyCode === 32 && event.shiftKey) {
+                    word.focus();
                 }
                 if (event.key === 'ArrowDown') {
                     check(6);
@@ -317,8 +404,25 @@
                 if (event.key === '+') {
                     check(4);
                 }
-                if (event.key === '-') {
+                if (event.key === '-' && !event.shiftKey) {
                     check(5);
+                }
+            }
+            function submitTxt() {
+                var formData = new FormData(document.getElementById("dic-upload"));
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/users/uploadword');
+                formData.append("dic", dicname);
+                xhr.send(formData);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            console.log("上传成功");
+                            location.reload();
+                        } else {
+                            console.log("发生错误");
+                        }
+                    }
                 }
             }
         </script>

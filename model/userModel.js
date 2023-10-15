@@ -5,7 +5,11 @@ let MainSchema = new mongoose.Schema({
     password: String,
     email: String,
     permission: String,
-    EnglishCount: [Number],
+    EnglishCount: [
+        {
+            dicname: String,
+            count: [Number],
+        }],
 }, {
     timestamps: true
 });
