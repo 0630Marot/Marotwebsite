@@ -228,7 +228,7 @@ router.post('/newdic', function (req, res, next) {
   const dic = req.body.dic;
 
   WordModel.findOne({ dicname: dic }).then(data => {
-    res.send(1);
+    res.send('duplicate_file');
   }).catch(error => {
     WordModel.create({
       permission: 'private',
