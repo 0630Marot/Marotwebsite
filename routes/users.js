@@ -183,7 +183,8 @@ router.post('/yd', function (req, res, next) {
     });
     targetRes.on('end', () => {
       const jsonData = JSON.parse(resData);
-      if ('word' in jsonData.ec) {
+      
+      if ('ec'in jsonData&&'word' in jsonData.ec) {
         const wiki = 'wikipedia_digest' in jsonData ? jsonData.wikipedia_digest.summarys : '';
         const newJson = {
           wiki: wiki,
@@ -226,8 +227,8 @@ router.post('/etymonline', function (req, res, next) {
 router.post('/newdic', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const dic = req.body.dic;
-
   WordModel.findOne({ dicname: dic }).then(data => {
+    if(data==null)throw "";
     res.send('duplicate_file');
   }).catch(error => {
     WordModel.create({
@@ -236,7 +237,6 @@ router.post('/newdic', function (req, res, next) {
       dicname: dic,
       word: [],
     }).then(data => {
-      console.log(data);
       res.send(data);
     }).catch(error => {
       res.send(error);

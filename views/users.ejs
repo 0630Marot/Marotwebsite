@@ -93,8 +93,11 @@
             <button id="word-right" onclick="check(5)">标记-1</button>
             <button id="word-next" onclick="check(6)">下一个</button>
             <br>
+            <input type="checkbox" id="listen-mode" name="islisten" onchange="listen_write = !listen_write;switchListenMode(!listen_write)">听写模式
+            <br>
             <input type="checkbox" id="review-mode" name="isreview">复习模式
             <input type="number" id="reviwe-level" name="reviewLevel">
+
             <div id="dictionary">
                 <div id="uk">
                     <span id="uk-p"></span>
@@ -122,6 +125,7 @@
             let indexNum = 1;
             let wordContent;
             let dicname = "IELTS";
+            let listen_write = false;
             const word = document.getElementById('word-text');
             const index = document.getElementById('word-index');
             const mark = document.getElementById('word-mark');
@@ -239,6 +243,7 @@
                         if (xhr.status >= 200 && xhr.status < 300) {
                             const jsonObj = window.JSON.parse(xhr.response);
                             if ('error' in jsonObj) {
+                                yd.innerHTML = '有道词库缺失';
                                 return;
                             }
                             // console.log(jsonObj.wiki.summary);
@@ -249,6 +254,7 @@
                                     continue;
                                 }
                                 st = st.replace(new RegExp(word, 'gi'), '**');
+                                st = processString(st);
                                 yd.innerHTML += st;
                                 yd.innerHTML += '<br>';
                             }
@@ -264,6 +270,10 @@
                                 wiki.innerText = jsonObj.wiki[0].summary;
                             }
                             wiki.style.display = 'none';
+                            if(listen_write){
+                                audioSet(1);
+                                switchListenMode(!listen_write);
+                            }
                             // console.log(xhr.response);
                         }
                     }
@@ -283,7 +293,7 @@
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4) {
                             if (xhr.status >= 200 && xhr.status < 300) {
-                                if (xhr.response == 1) {
+                                if (xhr.response == 'duplicate_file') {
                                     alert('已有重名词库');
                                     check(0);
                                 } else {
@@ -361,12 +371,21 @@
                     trueword.style.visibility = 'hidden';
                     ukp.style.visibility = 'hidden';
                     usp.style.visibility = 'hidden';
+                    if(listen_write)switchListenMode(false);
                 } else {
                     trueword.style.visibility = 'visible';
                     ukp.style.visibility = 'visible';
                     usp.style.visibility = 'visible';
+                    if(listen_write)switchListenMode(true);
                 }
-
+                
+            }
+            function switchListenMode(isvis) {
+                if (isvis) {
+                    yd.style.visibility = 'visible';
+                } else {
+                    yd.style.visibility = 'hidden';
+                }
             }
             function toggleDisplay(element) {
                 // 获取元素的当前 display 样式
@@ -424,6 +443,29 @@
                         }
                     }
                 }
+            }
+
+            function processString(inputString) {
+                let outputString = '';
+                let index = 0;
+                while (index < inputString.length) {
+                    let startPos = inputString.indexOf('（', index);
+                    let endPos = inputString.indexOf('）', startPos);
+                    if (startPos === -1 || endPos === -1) {
+                        outputString += inputString.slice(index);
+                        break;
+                    }
+                    outputString += inputString.slice(index, startPos);
+                    let subString = inputString.slice(startPos, endPos + 1);
+                    index = endPos + 1;
+                    if (subString.includes('等于') || subString.includes('现在分词')) {
+                        continue;
+                    } else {
+                        outputString += subString;
+                    }
+
+                }
+                return outputString;
             }
         </script>
 </body>
